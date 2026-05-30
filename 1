@@ -132,7 +132,7 @@ void compress(const char *in, const char *out) {
 
     getFreq(fin, freq);
     fwrite(freq, sizeof(unsigned int), MAX_CHAR, fout);
-    fwrite(&tail_bits, 1, 1, fout); // 占位
+    fwrite(&tail_bits, 1, 1, fout); 
 
     HuffNode *root = buildHuffTree(freq);
     unsigned char bits[256];
@@ -157,7 +157,7 @@ void compress(const char *in, const char *out) {
         buf <<= (8 - bitCnt);
         fwrite(&buf, 1, 1, fout);
     }
-    // 回写真实有效位数
+
     fseek(fout, MAX_CHAR * sizeof(unsigned int), SEEK_SET);
     fwrite(&tail_bits, 1, 1, fout);
 
@@ -195,7 +195,7 @@ void decompress(const char *in, const char *out) {
     freeHuffTree(root);
 }
 
-// 多文件压缩（指针偏移彻底修复）
+// 多文件压缩
 void compressMulti(char *files[], int fileCnt, const char *out) {
     FILE *fout = fopen(out, "wb");
     fwrite(&fileCnt, sizeof(int), 1, fout);
@@ -217,7 +217,6 @@ void compressMulti(char *files[], int fileCnt, const char *out) {
         getFreq(fin, freq);
         fwrite(freq, sizeof(unsigned int), MAX_CHAR, fout);
 
-        // 先记录当前位置
         long tail_pos = ftell(fout);
         unsigned char tail_bits = 0;
         fwrite(&tail_bits, 1, 1, fout);
@@ -246,8 +245,6 @@ void compressMulti(char *files[], int fileCnt, const char *out) {
             buf <<= (8 - bitCnt);
             fwrite(&buf, 1, 1, fout);
         }
-
-        // 【关键修复】直接回到记录的位置写，不猜偏移
         fseek(fout, tail_pos, SEEK_SET);
         fwrite(&tail_bits, 1, 1, fout);
         fseek(fout, 0, SEEK_END);
@@ -257,7 +254,7 @@ void compressMulti(char *files[], int fileCnt, const char *out) {
     }
     fclose(fout);
 }
-// 多文件解压（100% 完整解压所有文件）
+// 多文件解压
 void decompressMulti(const char *in) {
     FILE *fin = fopen(in, "rb");
     if (!fin) { printf("未找到文件：%s\n", in); exit(1); }
@@ -299,6 +296,7 @@ void decompressMulti(const char *in) {
     }
     fclose(fin);
 }
+
 // 显示帮助
 void help() {
     printf("===== 霍夫曼压缩软件 =====\n");
